@@ -1,0 +1,42 @@
+.git/
+.gitignore
+.vscode/
+.github/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.env
+.env.local
+*.log
+.DS_Store
+poetry.lock
+.idea/
+*.swp
+*.swo
+*~
+
+# Test files
+tests/
+test_*.py
+*_test.py
+
+# Build artifacts
+*.tar.gz
+*.zip
+
+# IDE
+.vscode/
+.idea/
+
+# Docker files (don't include in image build context unnecessarily)
+docker-compose.override.yml
+.dockerignore

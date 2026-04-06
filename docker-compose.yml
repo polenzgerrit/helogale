@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  helogale:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: helogale-detector
+    hostname: helogale
+    
+    # Required for wireless interface access
+    network_mode: host
+    privileged: true
+    
+    # Environment variables
+    environment:
+      - HELOGALE_IFACE=${HELOGALE_IFACE:-wlan0}
+      - HELOGALE_SSID=${HELOGALE_SSID:-MyNetwork}
+      - HELOGALE_EXPECTED_BSSIDS=${HELOGALE_EXPECTED_BSSIDS:-}
+      - HELOGALE_HTTP_PORT=${HELOGALE_HTTP_PORT:-8080}
+      - HELOGALE_WS_PORT=${HELOGALE_WS_PORT:-8765}
+      - HELOGALE_CHANNELS=${HELOGALE_CHANNELS:-1,6,11,13}
+      - HELOGALE_HOP_INTERVAL=${HELOGALE_HOP_INTERVAL:-5.0}
+      - HELOGALE_DEAUTH_THRESHOLD=${HELOGALE_DEAUTH_THRESHOLD:-5}
+      - HELOGALE_DEAUTH_WINDOW=${HELOGALE_DEAUTH_WINDOW:-10}
+    
+    # Volumes for persistence (optional)
+    volumes:
+      - helogale_data:/app/data
+      - ./dashboard.html:/app/dashboard.html:ro
+    
+    # Resource limits (optional)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 256M
+
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  helogale_data:
+    driver: local

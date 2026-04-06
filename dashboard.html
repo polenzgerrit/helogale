@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helogale - Wi-Fi Intrusion Detection</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-indicator.inactive {
+            background: #ef4444;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .alert-box {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .alert-box.warning {
+            background: #fffbeb;
+            border-left-color: #f59e0b;
+        }
+
+        .alert-box.info {
+            background: #f0f9ff;
+            border-left-color: #3b82f6;
+        }
+
+        .alert-time {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .alert-message {
+            font-size: 14px;
+            color: #333;
+            margin-top: 5px;
+        }
+
+        .event-list {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            padding: 10px;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 13px;
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-item.alert {
+            background: #fef2f2;
+        }
+
+        .bssid-item {
+            padding: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5566d2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .refresh-rate {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .refresh-rate label {
+            font-size: 13px;
+        }
+
+        .refresh-rate input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+
+        .error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            padding: 15px;
+            border-radius: 4px;
+            color: #7f1d1d;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Helogale - Wi-Fi Intrusion Detection</h1>
+            <div class="status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+        </div>
+
+        <div id="errorBox"></div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📡 SSID</h2>
+                <div class="stat-value" id="ssidValue">—</div>
+                <div class="stat-label">Network Name</div>
+            </div>
+
+            <div class="card">
+                <h2>📊 BSSIDs Observed</h2>
+                <div class="stat-value" id="bssidCountValue">0</div>
+                <div class="stat-label" id="bssidCountLabel">Expected: —</div>
+            </div>
+
+            <div class="card">
+                <h2>⚠️ Active Alerts</h2>
+                <div class="stat-value" id="alertCountValue">0</div>
+                <div class="stat-label">Critical Events</div>
+            </div>
+
+            <div class="card">
+                <h2>📈 Total Events</h2>
+                <div class="stat-value" id="eventCountValue">0</div>
+                <div class="stat-label">All Activity</div>
+            </div>
+
+            <div class="card">
+                <h2>📶 Current Channel</h2>
+                <div class="stat-value" id="channelValue">—</div>
+                <div class="stat-label">WiFi Channel</div>
+            </div>
+
+            <div class="card">
+                <h2>🔄 Status</h2>
+                <div class="stat-value" id="runningValue">—</div>
+                <div class="stat-label">Analyzer Status</div>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>🚨 Recent Alerts</h2>
+                <div id="alertsList" class="event-list">
+                    <div class="loading">Loading alerts...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🔍 Observed BSSIDs</h2>
+                <div id="bssidList" class="event-list">
+                    <div class="loading">Scanning for networks...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Recent Events</h2>
+            <div class="refresh-rate">
+                <label for="refreshRate">Refresh every:</label>
+                <input type="number" id="refreshRate" min="1" max="60" value="2" placeholder="seconds">
+                <span>seconds</span>
+            </div>
+            <div id="eventsList" class="event-list">
+                <div class="loading">Loading events...</div>
+            </div>
+            <div class="controls">
+                <button class="btn-primary" onclick="refresh()">🔄 Refresh Now</button>
+                <button class="btn-danger" onclick="stopAnalyzer()">⏹️ Stop Analyzer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080/api';
+        let autoRefreshInterval = null;
+        let lastAlertCount = 0;
+
+        async function fetchAPI(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error(`Fetch error for ${endpoint}:`, error);
+                showError(`Failed to fetch ${endpoint}: ${error.message}`);
+                return null;
+            }
+        }
+
+        function showError(message) {
+            const box = document.getElementById('errorBox');
+            box.innerHTML = `<div class="error">${message}</div>`;
+            setTimeout(() => { box.innerHTML = ''; }, 5000);
+        }
+
+        async function refresh() {
+            const state = await fetchAPI('/state');
+            if (!state || !state.data) return;
+
+            const data = state.data;
+
+            // Update basic stats
+            document.getElementById('ssidValue').textContent = data.home_ssid || '—';
+            document.getElementById('bssidCountValue').textContent = data.observed_bssid_count || 0;
+            document.getElementById('bssidCountLabel').textContent = `Expected: ${data.expected_bssid_count}`;
+            document.getElementById('channelValue').textContent = data.current_channel || '—';
+            document.getElementById('runningValue').textContent = data.is_running ? '✓ Running' : '✗ Stopped';
+
+            // Update status indicator
+            const indicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            if (data.is_running) {
+                indicator.classList.remove('inactive');
+                statusText.textContent = '✓ Analyzer Active';
+            } else {
+                indicator.classList.add('inactive');
+                statusText.textContent = '✗ Analyzer Stopped';
+            }
+
+            // Fetch and display alerts
+            const alertsResp = await fetchAPI('/alerts?limit=20');
+            if (alertsResp && alertsResp.data) {
+                const alerts = alertsResp.data;
+                const alertCount = alerts.length;
+                document.getElementById('alertCountValue').textContent = alertCount;
+
+                const alertsList = document.getElementById('alertsList');
+                if (alerts.length === 0) {
+                    alertsList.innerHTML = '<div class="loading">No alerts</div>';
+                } else {
+                    alertsList.innerHTML = alerts.map(a => `
+                        <div class="alert-box warning">
+                            <div class="alert-time">${a.ts}</div>
+                            <div class="alert-message">${a.message}</div>
+                        </div>
+                    `).join('');
+                }
+
+                // Desktop notification for new alerts
+                if (alertCount > lastAlertCount && Notification.permission === 'granted') {
+                    new Notification('⚠️ Helogale Alert', {
+                        body: alerts[0]?.message || 'New alert detected',
+                        icon: '🛡️'
+                    });
+                }
+                lastAlertCount = alertCount;
+            }
+
+            // Fetch and display events
+            const eventsResp = await fetchAPI('/events?limit=50');
+            if (eventsResp && eventsResp.data) {
+                const events = eventsResp.data;
+                document.getElementById('eventCountValue').textContent = events.length;
+
+                const eventsList = document.getElementById('eventsList');
+                if (events.length === 0) {
+                    eventsList.innerHTML = '<div class="loading">No events</div>';
+                } else {
+                    eventsList.innerHTML = events.map(e => `
+                        <div class="event-item ${e.kind === 'alert' ? 'alert' : ''}">
+                            <strong>[${e.ts}]</strong> ${e.message}
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Display BSSIDs
+            if (data.seen_bssids && data.seen_bssids.length > 0) {
+                const bssidList = document.getElementById('bssidList');
+                bssidList.innerHTML = data.seen_bssids.map(bssid => `
+                    <div class="bssid-item">
+                        ${data.expected_bssids.includes(bssid) ? '✓' : '⚠️'} ${bssid}
+                    </div>
+                `).join('');
+            }
+        }
+
+        async function stopAnalyzer() {
+            if (confirm('Stop the analyzer?')) {
+                await fetchAPI('/stop');
+                clearInterval(autoRefreshInterval);
+                alert('Analyzer stopped.');
+            }
+        }
+
+        function startAutoRefresh() {
+            const rate = parseInt(document.getElementById('refreshRate').value) || 2;
+            clearInterval(autoRefreshInterval);
+            refresh();
+            autoRefreshInterval = setInterval(refresh, rate * 1000);
+        }
+
+        // Request notification permission on load
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Event listeners
+        document.getElementById('refreshRate').addEventListener('change', startAutoRefresh);
+        window.addEventListener('load', startAutoRefresh);
+    </script>
+</body>
+</html>

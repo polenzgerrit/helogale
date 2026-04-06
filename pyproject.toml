@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "helogale"
+version = "0.1.0"
+description = "A lightweight, container-friendly home WiFi intrusion detection and alerting system."
+authors = ["helogale <noreply@example.com>"]
+readme = "README.md"
+license = "Apache"
+keywords = ["wifi", "intrusion-detection", "monitoring", "security"]
+packages = [
+    { include = "helogale", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.14"
+scapy = "^2.7.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
