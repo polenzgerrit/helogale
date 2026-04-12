@@ -2,6 +2,8 @@
 
 A lightweight, container-friendly home WiFi intrusion detection and alerting system built with Python and open-source tools. Monitors your home network for deauthentication attacks, rogue access points, and SSID spoofing.
 
+<img width="125" height="111" alt="image" src="https://github.com/user-attachments/assets/ce86430f-6dd0-418f-b6cf-fe4697196b55" />
+
 ## Features
 
 - ✅ **Passive Monitor-Mode Sniffing**: Captures IEEE 802.11 frames without connecting to the network
